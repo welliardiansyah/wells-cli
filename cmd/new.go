@@ -11,9 +11,9 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new [project name]",
 	Short: "Generate project baru",
-	Args:  cobra.MinimumNArgs(3),
+	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		projectName := strings.Join(args, " ")
+		projectName := strings.Join(args, " ") // gabungkan semua arg
 		fmt.Printf("Membuat project baru: %s\n", projectName)
 		return scaffold.CopyTemplate(projectName)
 	},
