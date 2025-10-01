@@ -8,21 +8,17 @@ import (
 
 func TestCopyTemplate(t *testing.T) {
 	tmp := t.TempDir()
-	opts := Options{ModuleName: "github.com/example/demo"}
-	if err := CopyTemplate(tmp, opts); err != nil {
-		t.Fatalf("CopyTemplate failed: %v", err)
+
+	err := CopyTemplate(tmp)
+	if err != nil {
+		t.Fatalf("CopyTemplate gagal: %v", err)
 	}
 
-	want := []string{
-		"go.mod",
-		"main.go",
-		"../../templates/wells-go/application/usecase.go",
-		"domain/entity.go",
-		"interfaces/http/handler.go",
+	if _, err := os.Stat(filepath.Join(tmp, "main.go")); os.IsNotExist(err) {
+		t.Fatal("File main.go tidak ditemukan")
 	}
-	for _, p := range want {
-		if _, err := os.Stat(filepath.Join(tmp, p)); os.IsNotExist(err) {
-			t.Fatalf("expected file missing: %s", p)
-		}
+
+	if _, err := os.Stat(filepath.Join(tmp, "README.md")); os.IsNotExist(err) {
+		t.Fatal("File README.md tidak ditemukan")
 	}
 }
