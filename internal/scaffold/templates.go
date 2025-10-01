@@ -6,6 +6,11 @@ import (
 )
 
 func TemplatePath() string {
-	dir, _ := os.Getwd()
-	return filepath.Join(dir, "wells-go")
+	if path := os.Getenv("WELLS_TEMPLATE_PATH"); path != "" {
+		return path
+	}
+
+	exePath, _ := os.Executable()
+	exeDir := filepath.Dir(exePath)
+	return filepath.Join(exeDir, "wells-go")
 }

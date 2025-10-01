@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/welliardiansyah/wells-cli/internal/scaffold"
@@ -10,9 +11,9 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new [project name]",
 	Short: "Generate project baru",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		projectName := args[0]
+		projectName := strings.Join(args, " ")
 		fmt.Printf("Membuat project baru: %s\n", projectName)
 		return scaffold.CopyTemplate(projectName)
 	},
