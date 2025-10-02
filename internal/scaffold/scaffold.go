@@ -202,6 +202,7 @@ func configTpl(module string) string {
 	return `package config
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -256,6 +257,19 @@ func LoadConfig(path string) (config Config, err error) {
 		// fallback ke env var saja kalau file tidak ada
 	}
 	err = viper.Unmarshal(&config)
+
+	// kalau DBSource kosong, generate dari variabel yang lain
+	if config.DBSource == "" {
+		config.DBSource = fmt.Sprintf(
+			"postgresql://%s:%s@%s:%s/%s?sslmode=disable",
+			config.DbUser,
+			config.DbPassword,
+			config.DbHost,
+			config.DbPort,
+			config.DbName,
+		)
+	}
+
 	return
 }
 `
