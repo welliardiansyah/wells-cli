@@ -42,7 +42,6 @@ func CreateProject(projectName string) error {
 		return fmt.Errorf("project name cannot be empty")
 	}
 
-	// Cegah overwrite project
 	if _, err := os.Stat(projectName); !os.IsNotExist(err) {
 		return fmt.Errorf("directory %s already exists", projectName)
 	}
