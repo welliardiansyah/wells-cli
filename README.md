@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wells Go Framework</title>
-</head>
-<body>
-
 <h1 align="center">Wells Go Framework</h1>
 
 <p align="center">
@@ -171,6 +162,3 @@ go tool cover -html=coverage.profile -o coverage.html
 
 <h2 id="license">📄 License</h2>
 <p>MIT License - see <a href="https://github.com/welliardiansyah/wells-cli/blob/master/LICENSE.md">LICENSE</a> for details.</p>
-
-</body>
-</html>
