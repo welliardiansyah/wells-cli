@@ -61,7 +61,7 @@ myapp/
   <li>Git</li>
 </ul>
 
-<h3>Install Wells-CLI</h3>
+<h3>Install Wells Go</h3>
 <pre><code>go install github.com/welliardiansyah/wells-cli@latest
 </code></pre>
 
@@ -78,7 +78,7 @@ go run main.go
 </code></pre>
 
 <h2 id="example-crud">📝 Example CRUD</h2>
-<p>Wells-CLI generates a working example CRUD for <code>User</code>:</p>
+<p>Wells Go generates a working example CRUD for <code>User</code>:</p>
 
 <ul>
   <li><code>GET /users</code> → List users</li>
