@@ -1,4 +1,3 @@
-// cmd/root.go
 package cmd
 
 import (
@@ -7,8 +6,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "wells",
-	Short: "Wells CLI Framework",
-	Long:  "Wells CLI adalah framework untuk generate project Go boilerplate",
+	Short: "Wells Go Framework CLI",
+	Long:  "CLI untuk generate project Go boilerplate dengan Wells Go Framework",
 }
 
 func Execute() error {

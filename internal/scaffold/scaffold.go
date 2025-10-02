@@ -2,61 +2,606 @@ package scaffold
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
-const TemplateRepo = "https://github.com/welliardiansyah/wells-go.git"
+var projectStructure = map[string][]string{
+	"application":    {"dtos", "mappers", "usecases"},
+	"domain":         {"entities", "migrate", "repository"},
+	"interfaces":     {"http"},
+	"infrastructure": {"config", "database", "middleware", "persistence", "redis"},
+	"response":       {},
+	"util":           {},
+}
 
-func CopyTemplate(targetDir string) error {
-	tmpDir, err := os.MkdirTemp("", "wells-template-*")
-	if err != nil {
-		return err
+// daftar file-template (path -> func(moduleName)string)
+var templateFiles = map[string]func(string) string{
+	"main.go":                              mainTpl,
+	"go.mod":                               goModTpl,
+	"app.env":                              envTpl,
+	"interfaces/http/server.go":            serverTpl,
+	"infrastructure/config/config.go":      configTpl,
+	"infrastructure/database/postgres.go":  databaseTpl,
+	"domain/entities/user.go":              userEntityTpl,
+	"domain/repository/user_repository.go": userRepoInterfaceTpl,
+	"infrastructure/persistence/user_repository_gorm.go": userRepoGormTpl,
+	"application/usecases/user_usecase.go":               userUsecaseTpl,
+	"application/dtos/user_dto.go":                       userDtoTpl,
+	"application/mappers/user_mapper.go":                 userMapperTpl,
+	"interfaces/http/users/user_handler.go":              userHandlerTpl,
+	"interfaces/http/users/routes.go":                    userRoutesTpl,
+	"response/response.go":                               responseTpl,
+}
+
+func CreateProject(projectName string) error {
+	start := time.Now()
+	moduleName := strings.TrimSpace(projectName)
+	if moduleName == "" {
+		return fmt.Errorf("project name cannot be empty")
 	}
-	defer os.RemoveAll(tmpDir)
 
-	fmt.Println("Mengunduh template dari GitHub...")
-	cmd := exec.Command("git", "clone", "--depth=1", TemplateRepo, tmpDir)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("gagal clone repo: %w", err)
+	fmt.Println("Generating project structure for module:", moduleName)
+
+	// create root folder
+	if err := os.MkdirAll(projectName, os.ModePerm); err != nil {
+		return fmt.Errorf("failed create project root: %w", err)
 	}
 
-	return filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
+	// create directories
+	for folder, subs := range projectStructure {
+		base := filepath.Join(projectName, folder)
+		if err := os.MkdirAll(base, os.ModePerm); err != nil {
+			return fmt.Errorf("failed create dir %s: %w", base, err)
+		}
+		for _, s := range subs {
+			subp := filepath.Join(base, s)
+			if err := os.MkdirAll(subp, os.ModePerm); err != nil {
+				return fmt.Errorf("failed create dir %s: %w", subp, err)
+			}
+		}
+	}
+
+	// write template files
+	for relPath, tplFn := range templateFiles {
+		full := filepath.Join(projectName, relPath)
+		if err := os.MkdirAll(filepath.Dir(full), os.ModePerm); err != nil {
+			return fmt.Errorf("failed create parent dir for %s: %w", full, err)
+		}
+		content := tplFn(moduleName)
+		if err := os.WriteFile(full, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed write file %s: %w", full, err)
+		}
+	}
+
+	elapsed := time.Since(start)
+	fmt.Printf("✅ Project %s generated in %s\n", projectName, elapsed.Truncate(time.Millisecond))
+	return nil
+}
+
+// ----------------------- TEMPLATES -----------------------
+
+func mainTpl(module string) string {
+	return fmt.Sprintf(`package main
+
+import (
+	"log"
+
+	"%s/interfaces/http"
+)
+
+func main() {
+	srv := http.NewServer()
+	if err := srv.Start(":8080"); err != nil {
+		log.Fatalf("failed to start server: %v", err)
+	}
+}
+`, module)
+}
+
+func goModTpl(module string) string {
+	return fmt.Sprintf(`module %s
+
+go 1.21
+
+require (
+	github.com/gin-gonic/gin v1.10.0
+	gorm.io/gorm v1.25.5
+	gorm.io/driver/postgres v1.4.0
+	github.com/spf13/viper v1.16.0
+)
+`, module)
+}
+
+func envTpl(module string) string {
+	return `ENVIRONMENT=development
+BASE_URL=http://localhost:8080
+ALLOWED_ORIGINS=*
+ALLOWED_METHODS=GET,POST,PUT,DELETE
+AUTHORIZATION_HEADERS=Authorization
+
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=wellsdb
+DB_SOURCE=postgresql://postgres:postgres@localhost:5432/wellsdb?sslmode=disable
+HTTP_SERVER_ADDRESS=:8080
+
+REDIS_ADDR=localhost:6379
+REDIS_PASSWORD=
+
+JWT_SECRET=supersecret
+JWT_ISSUER=wells
+ACCESS_TOKEN_TTL=15m
+REFRESH_TOKEN_TTL=24h
+`
+}
+
+func serverTpl(module string) string {
+	return fmt.Sprintf(`package http
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"%s/application/usecases"
+	"%s/domain/entities"
+	"%s/infrastructure/config"
+	"%s/infrastructure/database"
+	"%s/infrastructure/persistence"
+	users "%s/interfaces/http/users"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Server struct {
+	Engine *gin.Engine
+}
+
+func NewServer() *Server {
+	r := gin.Default()
+
+	if err := os.MkdirAll("logs", os.ModePerm); err != nil {
+		log.Println("warning: failed create logs dir:", err)
+	}
+	logFile := fmt.Sprintf("logs/%s.log", time.Now().Format("2006-01-02"))
+	f, _ := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	log.SetOutput(f)
+
+	cfg := config.GetConfig()
+	if err := database.InitializeDatabase(cfg.DBSource); err != nil {
+		log.Fatalf("failed open db: %v", err)
+	}
+
+	if err := database.GetDB().AutoMigrate(&entities.User{}); err != nil {
+		log.Fatalf("auto migrate failed: %v", err)
+	}
+
+	repo := persistence.NewUserRepositoryGorm(database.GetDB())
+	uc := usecases.NewUserUsecase(repo)
+	handler := users.NewUserHandler(uc)
+
+	api := r.Group("/api/v1")
+	users.RegisterRoutes(api, handler)
+
+	return &Server{Engine: r}
+}
+
+func (s *Server) Start(addr string) error {
+	fmt.Println("🚀 starting server at", addr)
+	return s.Engine.Run(addr)
+}
+`, module, module, module, module, module, module)
+}
+
+func configTpl(module string) string {
+	return `package config
+
+import (
+	"sync"
+
+	"github.com/spf13/viper"
+)
+
+var configInstance *Config
+var once sync.Once
+
+func GetConfig() *Config {
+	once.Do(func() {
+		config, err := LoadConfig(".")
 		if err != nil {
-			return err
+			panic("Error loading config: " + err.Error())
 		}
-
-		relPath, err := filepath.Rel(tmpDir, path)
-		if err != nil {
-			return err
-		}
-		if relPath == ".git" || filepath.HasPrefix(relPath, ".git"+string(filepath.Separator)) {
-			return nil
-		}
-
-		destPath := filepath.Join(targetDir, relPath)
-
-		if info.IsDir() {
-			return os.MkdirAll(destPath, os.ModePerm)
-		}
-
-		srcFile, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer srcFile.Close()
-
-		destFile, err := os.Create(destPath)
-		if err != nil {
-			return err
-		}
-		defer destFile.Close()
-
-		_, err = io.Copy(destFile, srcFile)
-		return err
+		configInstance = &config
 	})
+	return configInstance
+}
+
+type Config struct {
+	Environment          string ` + "`mapstructure:\"ENVIRONMENT\"`" + `
+	BaseURL              string ` + "`mapstructure:\"BASE_URL\"`" + `
+	AllowedOrigins       string ` + "`mapstructure:\"ALLOWED_ORIGINS\"`" + `
+	AllowedMethods       string ` + "`mapstructure:\"ALLOWED_METHODS\"`" + `
+	AuthorizationHeaders string ` + "`mapstructure:\"AUTHORIZATION_HEADERS\"`" + `
+
+	DbUser     string ` + "`mapstructure:\"DB_USER\"`" + `
+	DbPassword string ` + "`mapstructure:\"DB_PASSWORD\"`" + `
+	DbHost     string ` + "`mapstructure:\"DB_HOST\"`" + `
+	DbPort     string ` + "`mapstructure:\"DB_PORT\"`" + `
+	DbName     string ` + "`mapstructure:\"DB_NAME\"`" + `
+	DBSource   string ` + "`mapstructure:\"DB_SOURCE\"`" + `
+
+	ServerPort        string ` + "`mapstructure:\"SERVER_PORT\"`" + `
+	HTTPServerAddress string ` + "`mapstructure:\"HTTP_SERVER_ADDRESS\"`" + `
+
+	REDIS_ADDR     string ` + "`mapstructure:\"REDIS_ADDR\"`" + `
+	REDIS_PASSWORD string ` + "`mapstructure:\"REDIS_PASSWORD\"`" + `
+
+	JWTSecret       string ` + "`mapstructure:\"JWT_SECRET\"`" + `
+	JWTIssuer       string ` + "`mapstructure:\"JWT_ISSUER\"`" + `
+	AccessTokenTTL  string ` + "`mapstructure:\"ACCESS_TOKEN_TTL\"`" + `
+	RefreshTokenTTL string ` + "`mapstructure:\"REFRESH_TOKEN_TTL\"`" + `
+}
+
+func LoadConfig(path string) (config Config, err error) {
+	viper.AddConfigPath(path)
+	viper.SetConfigName("app")
+	viper.SetConfigType("env")
+	viper.AutomaticEnv()
+	err = viper.ReadInConfig()
+	if err != nil {
+		return
+	}
+	err = viper.Unmarshal(&config)
+	return
+}
+`
+}
+
+func databaseTpl(module string) string {
+	return `package database
+
+import (
+	"fmt"
+	"` + module + `/domain/entities"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var DB *gorm.DB
+
+func InitializeDatabase(dsn string) error {
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to connect to PostgreSQL: %w", err)
+	}
+
+	DB = db
+	if err := DB.AutoMigrate(&entities.User{}); err != nil {
+		return fmt.Errorf("failed to migrate: %w", err)
+	}
+
+	fmt.Println("✅ PostgreSQL connected and migrated")
+	return nil
+}
+
+func GetDB() *gorm.DB {
+	return DB
+}
+`
+}
+
+func userEntityTpl(module string) string {
+	_ = module
+	return `package entities
+
+import "time"
+
+type User struct {
+	ID        uint      ` + "`gorm:\"primaryKey\" json:\"id\"`" + `
+	Name      string    ` + "`json:\"name\"`" + `
+	Email     string    ` + "`json:\"email\" gorm:\"unique\"`" + `
+	CreatedAt time.Time ` + "`json:\"created_at\"`" + `
+	UpdatedAt time.Time ` + "`json:\"updated_at\"`" + `
+}
+`
+}
+
+func userRepoInterfaceTpl(module string) string {
+	return `package repository
+
+import "` + module + `/domain/entities"
+
+type UserRepository interface {
+	Create(user *entities.User) error
+	FindAll() ([]entities.User, error)
+	FindByID(id uint) (*entities.User, error)
+	Update(user *entities.User) error
+	Delete(id uint) error
+}
+`
+}
+
+func userRepoGormTpl(module string) string {
+	return `package persistence
+
+import (
+	"` + module + `/domain/entities"
+	"` + module + `/domain/repository"
+
+	"gorm.io/gorm"
+)
+
+type UserRepositoryGorm struct {
+	db *gorm.DB
+}
+
+func NewUserRepositoryGorm(db *gorm.DB) repository.UserRepository {
+	return &UserRepositoryGorm{db: db}
+}
+
+func (r *UserRepositoryGorm) Create(user *entities.User) error {
+	return r.db.Create(user).Error
+}
+
+func (r *UserRepositoryGorm) FindAll() ([]entities.User, error) {
+	var users []entities.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (r *UserRepositoryGorm) FindByID(id uint) (*entities.User, error) {
+	var user entities.User
+	if err := r.db.First(&user, id).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepositoryGorm) Update(user *entities.User) error {
+	return r.db.Save(user).Error
+}
+
+func (r *UserRepositoryGorm) Delete(id uint) error {
+	return r.db.Delete(&entities.User{}, id).Error
+}
+`
+}
+
+func userUsecaseTpl(module string) string {
+	return `package usecases
+
+import (
+	"` + module + `/application/dtos"
+	"` + module + `/application/mappers"
+	"` + module + `/domain/repository"
+)
+
+type UserUsecase struct {
+	repo repository.UserRepository
+}
+
+func NewUserUsecase(repo repository.UserRepository) *UserUsecase {
+	return &UserUsecase{repo: repo}
+}
+
+func (u *UserUsecase) CreateUser(dto *dtos.UserDTO) error {
+	user := mappers.ToUserEntity(dto)
+	return u.repo.Create(user)
+}
+
+func (u *UserUsecase) GetUsers() ([]dtos.UserDTO, error) {
+	users, err := u.repo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	return mappers.ToUserDTOs(users), nil
+}
+
+func (u *UserUsecase) GetUserByID(id uint) (*dtos.UserDTO, error) {
+	user, err := u.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return mappers.ToUserDTO(user), nil
+}
+
+func (u *UserUsecase) UpdateUser(dto *dtos.UserDTO) error {
+	user := mappers.ToUserEntity(dto)
+	return u.repo.Update(user)
+}
+
+func (u *UserUsecase) DeleteUser(id uint) error {
+	return u.repo.Delete(id)
+}
+`
+}
+
+func userDtoTpl(module string) string {
+	_ = module
+	return `package dtos
+
+type UserDTO struct {
+	ID    uint   ` + "`json:\"id\"`" + `
+	Name  string ` + "`json:\"name\"`" + `
+	Email string ` + "`json:\"email\"`" + `
+}
+`
+}
+
+func userMapperTpl(module string) string {
+	_ = module
+	return `package mappers
+
+import (
+	"` + module + `/application/dtos"
+	"` + module + `/domain/entities"
+)
+
+func ToUserDTO(user *entities.User) *dtos.UserDTO {
+	return &dtos.UserDTO{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+}
+
+func ToUserDTOs(users []entities.User) []dtos.UserDTO {
+	var result []dtos.UserDTO
+	for _, u := range users {
+		result = append(result, dtos.UserDTO{
+			ID:    u.ID,
+			Name:  u.Name,
+			Email: u.Email,
+		})
+	}
+	return result
+}
+
+func ToUserEntity(dto *dtos.UserDTO) *entities.User {
+	return &entities.User{
+		ID:    dto.ID,
+		Name:  dto.Name,
+		Email: dto.Email,
+	}
+}
+`
+}
+
+func userHandlerTpl(module string) string {
+	return `package users
+
+import (
+	"net/http"
+	"strconv"
+
+	"` + module + `/application/dtos"
+	"` + module + `/application/usecases"
+	"` + module + `/response"
+
+	"github.com/gin-gonic/gin"
+)
+
+type UserHandler struct {
+	uc *usecases.UserUsecase
+}
+
+func NewUserHandler(uc *usecases.UserUsecase) *UserHandler {
+	return &UserHandler{uc: uc}
+}
+
+func (h *UserHandler) CreateUser(c *gin.Context) {
+	var req dtos.UserDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ErrorResponse(c.Writer, http.StatusBadRequest, "invalid request", err.Error())
+		return
+	}
+	if err := h.uc.CreateUser(&req); err != nil {
+		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed create user", err.Error())
+		return
+	}
+	response.SuccessResponse(c.Writer, "user created", req)
+}
+
+func (h *UserHandler) GetUsers(c *gin.Context) {
+	users, err := h.uc.GetUsers()
+	if err != nil {
+		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed fetch users", err.Error())
+		return
+	}
+	response.SuccessResponse(c.Writer, "users list", users)
+}
+
+func (h *UserHandler) GetUserByID(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	user, err := h.uc.GetUserByID(uint(id))
+	if err != nil {
+		response.ErrorResponse(c.Writer, http.StatusNotFound, "user not found", err.Error())
+		return
+	}
+	response.SuccessResponse(c.Writer, "user found", user)
+}
+
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	var req dtos.UserDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ErrorResponse(c.Writer, http.StatusBadRequest, "invalid request", err.Error())
+		return
+	}
+	req.ID = uint(id)
+	if err := h.uc.UpdateUser(&req); err != nil {
+		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed update user", err.Error())
+		return
+	}
+	response.SuccessResponse(c.Writer, "user updated", req)
+}
+
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	if err := h.uc.DeleteUser(uint(id)); err != nil {
+		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed delete user", err.Error())
+		return
+	}
+	response.SuccessResponse(c.Writer, "user deleted", nil)
+}
+`
+}
+
+func userRoutesTpl(module string) string {
+	_ = module
+	return `package users
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func RegisterRoutes(rg *gin.RouterGroup, h *UserHandler) {
+	r := rg.Group("/users")
+	r.POST("/", h.CreateUser)
+	r.GET("/", h.GetUsers)
+	r.GET("/:id", h.GetUserByID)
+	r.PUT("/:id", h.UpdateUser)
+	r.DELETE("/:id", h.DeleteUser)
+}
+`
+}
+
+func responseTpl(module string) string {
+	_ = module
+	return `package response
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+func SuccessResponse(w http.ResponseWriter, message string, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": message,
+		"data":    data,
+	})
+}
+
+func ErrorResponse(w http.ResponseWriter, status int, message string, err interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": false,
+		"message": message,
+		"error":   err,
+	})
+}
+`
 }

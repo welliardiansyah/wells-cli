@@ -9,9 +9,9 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Tampilkan versi CLI",
+	Short: "Tampilkan versi",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("wells-cli v1.0.0")
+		fmt.Println("wells go v1.0.0")
 	},
 }
 
