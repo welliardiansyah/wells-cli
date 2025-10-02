@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <strong>Wells-CLI</strong> is a lightweight scaffolding tool for generating modular Go backend projects with <b>Clean Architecture</b> principles.  
+  <strong>Wells Go</strong> is a lightweight scaffolding tool for generating modular Go backend projects with <b>Clean Architecture</b> principles.  
   Save time, enforce structure, and start coding your business logic right away!
 </p>
 
@@ -27,8 +27,8 @@
 
 <h2 id="about-the-project">ℹ️ About The Project</h2>
 <p>
-  <b>Wells-CLI</b> helps Go developers kickstart projects with a clean and modular foundation.  
-  Instead of manually setting up boilerplate, Wells-CLI generates a ready-to-use structure following Domain-Driven Design (DDD) and Clean Architecture.
+  <b>Wells Go</b> helps Go developers kickstart projects with a clean and modular foundation.  
+  Instead of manually setting up boilerplate, Wells Go generates a ready-to-use structure following Domain-Driven Design (DDD) and Clean Architecture.
 </p>
 
 <h2 id="features">🚀 Features</h2>
