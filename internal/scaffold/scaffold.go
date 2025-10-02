@@ -17,7 +17,6 @@ var projectStructure = map[string][]string{
 	"util":           {},
 }
 
-// daftar file-template (path -> func(moduleName)string)
 var templateFiles = map[string]func(string) string{
 	"main.go":                              mainTpl,
 	"go.mod":                               goModTpl,
@@ -43,14 +42,17 @@ func CreateProject(projectName string) error {
 		return fmt.Errorf("project name cannot be empty")
 	}
 
+	// Cegah overwrite project
+	if _, err := os.Stat(projectName); !os.IsNotExist(err) {
+		return fmt.Errorf("directory %s already exists", projectName)
+	}
+
 	fmt.Println("Generating project structure for module:", moduleName)
 
-	// create root folder
 	if err := os.MkdirAll(projectName, os.ModePerm); err != nil {
 		return fmt.Errorf("failed create project root: %w", err)
 	}
 
-	// create directories
 	for folder, subs := range projectStructure {
 		base := filepath.Join(projectName, folder)
 		if err := os.MkdirAll(base, os.ModePerm); err != nil {
@@ -64,7 +66,6 @@ func CreateProject(projectName string) error {
 		}
 	}
 
-	// write template files
 	for relPath, tplFn := range templateFiles {
 		full := filepath.Join(projectName, relPath)
 		if err := os.MkdirAll(filepath.Dir(full), os.ModePerm); err != nil {
@@ -95,7 +96,7 @@ import (
 func main() {
 	srv := http.NewServer()
 	if err := srv.Start(":8080"); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		log.Fatalf("failed to start server: %%v", err)
 	}
 }
 `, module)
@@ -150,7 +151,6 @@ import (
 	"time"
 
 	"%s/application/usecases"
-	"%s/domain/entities"
 	"%s/infrastructure/config"
 	"%s/infrastructure/database"
 	"%s/infrastructure/persistence"
@@ -166,20 +166,20 @@ type Server struct {
 func NewServer() *Server {
 	r := gin.Default()
 
+	// Logging
 	if err := os.MkdirAll("logs", os.ModePerm); err != nil {
 		log.Println("warning: failed create logs dir:", err)
 	}
-	logFile := fmt.Sprintf("logs/%s.log", time.Now().Format("2006-01-02"))
-	f, _ := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	log.SetOutput(f)
+	logFile := fmt.Sprintf("logs/%%s.log", time.Now().Format("2006-01-02"))
+	if f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666); err == nil {
+		log.SetOutput(f)
+	} else {
+		log.Println("warning: log file not created, using stdout")
+	}
 
 	cfg := config.GetConfig()
 	if err := database.InitializeDatabase(cfg.DBSource); err != nil {
-		log.Fatalf("failed open db: %v", err)
-	}
-
-	if err := database.GetDB().AutoMigrate(&entities.User{}); err != nil {
-		log.Fatalf("auto migrate failed: %v", err)
+		log.Fatalf("failed open db: %%v", err)
 	}
 
 	repo := persistence.NewUserRepositoryGorm(database.GetDB())
@@ -196,7 +196,7 @@ func (s *Server) Start(addr string) error {
 	fmt.Println("🚀 starting server at", addr)
 	return s.Engine.Run(addr)
 }
-`, module, module, module, module, module, module)
+`, module, module, module, module, module)
 }
 
 func configTpl(module string) string {
@@ -253,9 +253,8 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
-	err = viper.ReadInConfig()
-	if err != nil {
-		return
+	if err = viper.ReadInConfig(); err != nil {
+		// fallback ke env var saja kalau file tidak ada
 	}
 	err = viper.Unmarshal(&config)
 	return
@@ -501,57 +500,57 @@ func NewUserHandler(uc *usecases.UserUsecase) *UserHandler {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dtos.UserDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c.Writer, http.StatusBadRequest, "invalid request", err.Error())
+		response.Error(c, http.StatusBadRequest, "invalid request", err.Error())
 		return
 	}
 	if err := h.uc.CreateUser(&req); err != nil {
-		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed create user", err.Error())
+		response.Error(c, http.StatusInternalServerError, "failed create user", err.Error())
 		return
 	}
-	response.SuccessResponse(c.Writer, "user created", req)
+	response.Success(c, "user created", req)
 }
 
 func (h *UserHandler) GetUsers(c *gin.Context) {
 	users, err := h.uc.GetUsers()
 	if err != nil {
-		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed fetch users", err.Error())
+		response.Error(c, http.StatusInternalServerError, "failed fetch users", err.Error())
 		return
 	}
-	response.SuccessResponse(c.Writer, "users list", users)
+	response.Success(c, "users list", users)
 }
 
 func (h *UserHandler) GetUserByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	user, err := h.uc.GetUserByID(uint(id))
 	if err != nil {
-		response.ErrorResponse(c.Writer, http.StatusNotFound, "user not found", err.Error())
+		response.Error(c, http.StatusNotFound, "user not found", err.Error())
 		return
 	}
-	response.SuccessResponse(c.Writer, "user found", user)
+	response.Success(c, "user found", user)
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req dtos.UserDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c.Writer, http.StatusBadRequest, "invalid request", err.Error())
+		response.Error(c, http.StatusBadRequest, "invalid request", err.Error())
 		return
 	}
 	req.ID = uint(id)
 	if err := h.uc.UpdateUser(&req); err != nil {
-		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed update user", err.Error())
+		response.Error(c, http.StatusInternalServerError, "failed update user", err.Error())
 		return
 	}
-	response.SuccessResponse(c.Writer, "user updated", req)
+	response.Success(c, "user updated", req)
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	if err := h.uc.DeleteUser(uint(id)); err != nil {
-		response.ErrorResponse(c.Writer, http.StatusInternalServerError, "failed delete user", err.Error())
+		response.Error(c, http.StatusInternalServerError, "failed delete user", err.Error())
 		return
 	}
-	response.SuccessResponse(c.Writer, "user deleted", nil)
+	response.Success(c, "user deleted", nil)
 }
 `
 }
@@ -580,24 +579,21 @@ func responseTpl(module string) string {
 	return `package response
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func SuccessResponse(w http.ResponseWriter, message string, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+func Success(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": message,
 		"data":    data,
 	})
 }
 
-func ErrorResponse(w http.ResponseWriter, status int, message string, err interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+func Error(c *gin.Context, status int, message string, err interface{}) {
+	c.JSON(status, gin.H{
 		"success": false,
 		"message": message,
 		"error":   err,
