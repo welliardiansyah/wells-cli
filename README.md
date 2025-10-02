@@ -10,6 +10,11 @@
   Save time, enforce structure, and start coding your business logic right away!
 </p>
 
+<!-- Added image -->
+<p align="center">
+  <img src="https://statics.cdn.200lab.io/2023/06/golang-la-gi-1.jpeg?width=1200" alt="Golang Overview" width="800">
+</p>
+
 <hr>
 
 <h2>📌 Table of Contents</h2>
