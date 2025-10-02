@@ -12,7 +12,7 @@
 
 <!-- Added image -->
 <p align="center">
-  <img src="https://statics.cdn.200lab.io/2023/06/golang-la-gi-1.jpeg?width=1200" alt="Golang Overview" width="800">
+  <img src="https://drive.google.com/file/d/1LcG8SAoEk-I3vShNuekDHlzVJ-IxsmQG/view?usp=sharing" alt="Golang Overview" width="650">
 </p>
 
 <hr>
