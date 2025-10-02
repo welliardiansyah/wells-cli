@@ -1,4 +1,4 @@
-<h1 align="center">⚡ Wells Go Framework</h1>
+<h1 align="center">Wells Go Framework</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.18+-00ADD8?logo=go" alt="Go Version">
