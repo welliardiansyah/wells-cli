@@ -1,4 +1,4 @@
-<h1 align="center">⚡ Wells-CLI: Go Project Scaffolding Tool</h1>
+<h1 align="center">⚡ Wells Go Framework</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.18+-00ADD8?logo=go" alt="Go Version">
@@ -62,14 +62,10 @@ myapp/
 </ul>
 
 <h3>Install Wells-CLI</h3>
-<pre><code>git clone https://github.com/welliardiansyah/wells-cli.git
-cd wells-cli
-go install
+<pre><code>go install github.com/welliardiansyah/wells-cli@latest
 </code></pre>
 
-This will install the <code>wells</code> command into your <code>$GOPATH/bin</code> or Go bin path.  
-Ensure your PATH includes Go bin:
-
+Make sure your <code>$GOPATH/bin</code> is in your <code>PATH</code>:  
 <pre><code>export PATH=$PATH:$(go env GOPATH)/bin
 </code></pre>
 
