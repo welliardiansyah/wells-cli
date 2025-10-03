@@ -10,17 +10,30 @@ import (
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Run the project (alias for 'go run main.go')",
+	Short: "Run the project (default: API server)",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if _, err := os.Stat("main.go"); os.IsNotExist(err) {
-			return fmt.Errorf("main.go not found in the current directory")
+		target := "cmd/api/main.go"
+		if len(args) > 0 {
+			switch args[0] {
+			case "worker":
+				target = "cmd/worker/main.go"
+			case "api":
+				target = "cmd/api/main.go"
+			default:
+				fmt.Println("[WARNING] Unknown argument, defaulting to API server")
+			}
 		}
-		run := exec.Command("go", "run", "main.go")
+
+		if _, err := os.Stat(target); os.IsNotExist(err) {
+			return fmt.Errorf("%s not found. Make sure your project is generated correctly", target)
+		}
+
+		fmt.Println("🚀 Running project:", target)
+		run := exec.Command("go", "run", target)
 		run.Stdout = os.Stdout
 		run.Stderr = os.Stderr
 		run.Stdin = os.Stdin
 
-		fmt.Println("🚀 Running the project with 'go run main.go' ...")
 		return run.Run()
 	},
 }

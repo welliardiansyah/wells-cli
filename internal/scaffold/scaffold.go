@@ -363,7 +363,6 @@ func LoadConfig(path string) (config Config, err error) {
 }
 
 func databaseTpl(module string) string {
-	// Including sqlite fallback so generated project can run without Postgres
 	return `package database
 
 import (
@@ -372,30 +371,24 @@ import (
 	"` + module + `/domain/entities"
 
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
 func InitializeDatabase(dsn string) error {
-	// Try Postgres first
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		// Fallback to sqlite
-		log.Println("⚠️ PostgreSQL connect failed, fallback to SQLite (data.db):", err)
-		db, err = gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
-		if err != nil {
-			return fmt.Errorf("failed to connect to any database: %w", err)
-		}
+		return fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 
 	DB = db
+
 	if err := DB.AutoMigrate(&entities.User{}); err != nil {
-		return fmt.Errorf("failed to migrate: %w", err)
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	fmt.Println("✅ Database connected and migrated")
+	log.Println("✅ PostgreSQL connected and migrated")
 	return nil
 }
 
@@ -585,7 +578,6 @@ func ToUserEntity(dto *dtos.UserDTO) *entities.User {
 }
 
 func userHandlerTpl(module string) string {
-	// Note: response import changed to pkg/response
 	return `package users
 
 import (
