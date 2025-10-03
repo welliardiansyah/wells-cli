@@ -26,13 +26,13 @@ func LogError(msg string, err error) {
 }
 
 var projectStructure = map[string][]string{
-	"cmd":            {},
-	"config":         {},
-	"application":    {"dtos", "mappers", "usecases"},
-	"domain":         {"entities", "repository"},
-	"infrastructure": {"database", "cache", "external", "persistence"},
-	"interfaces":     {"http", "cli"},
-	"pkg":            {"logger", "response"},
+	"cmd/{{.AppName}}": {},
+	"config":           {},
+	"application":      {"dtos", "mappers", "usecases"},
+	"domain":           {"entities", "repository"},
+	"infrastructure":   {"database", "cache", "external", "persistence"},
+	"interfaces":       {"http", "cli"},
+	"pkg":              {"logger", "response"},
 }
 
 var templateFiles = map[string]func(string) string{
