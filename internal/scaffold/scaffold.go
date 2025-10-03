@@ -26,30 +26,30 @@ func LogError(msg string, err error) {
 }
 
 var projectStructure = map[string][]string{
+	"cmd":            {"api", "worker"},
 	"application":    {"dtos", "mappers", "usecases"},
 	"domain":         {"entities", "migrate", "repository"},
 	"interfaces":     {"http"},
 	"infrastructure": {"config", "database", "middleware", "persistence", "redis"},
-	"response":       {},
-	"util":           {},
+	"pkg":            {"response"},
 }
 
 var templateFiles = map[string]func(string) string{
-	"main.go":                              mainTpl,
-	"go.mod":                               goModTpl,
-	"app.env":                              envTpl,
-	"interfaces/http/server.go":            serverTpl,
-	"infrastructure/config/config.go":      configTpl,
-	"infrastructure/database/postgres.go":  databaseTpl,
-	"domain/entities/user.go":              userEntityTpl,
-	"domain/repository/user_repository.go": userRepoInterfaceTpl,
+	"cmd/api/main.go":                                    mainTpl,
+	"go.mod":                                             goModTpl,
+	"app.env":                                            envTpl,
+	"interfaces/http/server.go":                          serverTpl,
+	"infrastructure/config/config.go":                    configTpl,
+	"infrastructure/database/postgres.go":                databaseTpl,
+	"domain/entities/user.go":                            userEntityTpl,
+	"domain/repository/user_repository.go":               userRepoInterfaceTpl,
 	"infrastructure/persistence/user_repository_gorm.go": userRepoGormTpl,
 	"application/usecases/user_usecase.go":               userUsecaseTpl,
 	"application/dtos/user_dto.go":                       userDtoTpl,
 	"application/mappers/user_mapper.go":                 userMapperTpl,
 	"interfaces/http/users/user_handler.go":              userHandlerTpl,
 	"interfaces/http/users/routes.go":                    userRoutesTpl,
-	"response/response.go":                               responseTpl,
+	"pkg/response/response.go":                           responseTpl,
 }
 
 func CreateProject(projectName string) error {
