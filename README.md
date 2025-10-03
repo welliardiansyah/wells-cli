@@ -25,7 +25,8 @@
   <li><a href="#installation">Installation</a></li>
   <li><a href="#usage">Usage</a></li>
   <li><a href="#cli-commands">CLI Commands</a></li>
-  <li><a href="#example-crud">Example CRUD</a></li>
+  <li><a href="#example-crud">Example CRUD (User)</a></li>
+  <li><a href="#configuration">Configuration</a></li>
   <li><a href="#testing">Testing</a></li>
   <li><a href="#development-workflow">Development Workflow</a></li>
   <li><a href="#contributing">Contributing</a></li>
