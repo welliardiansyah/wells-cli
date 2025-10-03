@@ -26,30 +26,31 @@ func LogError(msg string, err error) {
 }
 
 var projectStructure = map[string][]string{
+	"cmd":            {},
+	"config":         {},
 	"application":    {"dtos", "mappers", "usecases"},
-	"domain":         {"entities", "migrate", "repository"},
-	"interfaces":     {"http"},
-	"infrastructure": {"config", "database", "middleware", "persistence", "redis"},
-	"response":       {},
-	"util":           {},
+	"domain":         {"entities", "repository"},
+	"infrastructure": {"database", "cache", "external", "persistence"},
+	"interfaces":     {"http", "cli"},
+	"pkg":            {"logger", "response"},
 }
 
 var templateFiles = map[string]func(string) string{
-	"main.go":                              mainTpl,
-	"go.mod":                               goModTpl,
-	"app.env":                              envTpl,
-	"interfaces/http/server.go":            serverTpl,
-	"infrastructure/config/config.go":      configTpl,
-	"infrastructure/database/postgres.go":  databaseTpl,
-	"domain/entities/user.go":              userEntityTpl,
-	"domain/repository/user_repository.go": userRepoInterfaceTpl,
-	"infrastructure/persistence/user_repository_gorm.go": userRepoGormTpl,
-	"application/usecases/user_usecase.go":               userUsecaseTpl,
-	"application/dtos/user_dto.go":                       userDtoTpl,
-	"application/mappers/user_mapper.go":                 userMapperTpl,
-	"interfaces/http/users/user_handler.go":              userHandlerTpl,
-	"interfaces/http/users/routes.go":                    userRoutesTpl,
-	"response/response.go":                               responseTpl,
+	"cmd/{{.AppName}}/main.go":                      mainTpl,
+	"go.mod":                                        goModTpl,
+	"app.env":                                       envTpl,
+	"config/config.go":                              configTpl,
+	"infrastructure/database/postgres.go":           databaseTpl,
+	"domain/entities/user.go":                       userEntityTpl,
+	"domain/repository/user_repository.go":          userRepoInterfaceTpl,
+	"infrastructure/persistence/user_repository.go": userRepoGormTpl,
+	"application/usecases/user_usecase.go":          userUsecaseTpl,
+	"application/dtos/user_dto.go":                  userDtoTpl,
+	"application/mappers/user_mapper.go":            userMapperTpl,
+	"interfaces/http/user_handler.go":               userHandlerTpl,
+	"interfaces/http/user_routes.go":                userRoutesTpl,
+	"pkg/response/response.go":                      responseTpl,
+	"pkg/logger/logger.go":                          loggerTpl,
 }
 
 func CreateProject(projectName string) error {
@@ -65,17 +66,20 @@ func CreateProject(projectName string) error {
 
 	LogInfo("Starting project generation for module: %s", moduleName)
 
+	// root project folder
 	if err := os.MkdirAll(projectName, os.ModePerm); err != nil {
 		return fmt.Errorf("failed create project root: %w", err)
 	}
 	LogSuccess("Created project root folder: %s", projectName)
 
+	// create base folders
 	for folder, subs := range projectStructure {
 		base := filepath.Join(projectName, folder)
 		if err := os.MkdirAll(base, os.ModePerm); err != nil {
 			return fmt.Errorf("failed create dir %s: %w", base, err)
 		}
 		LogInfo("Created folder: %s", base)
+
 		for _, s := range subs {
 			subp := filepath.Join(base, s)
 			if err := os.MkdirAll(subp, os.ModePerm); err != nil {
@@ -85,11 +89,15 @@ func CreateProject(projectName string) error {
 		}
 	}
 
+	// write template files
 	for relPath, tplFn := range templateFiles {
-		full := filepath.Join(projectName, relPath)
+		path := strings.ReplaceAll(relPath, "{{.AppName}}", moduleName)
+		full := filepath.Join(projectName, path)
+
 		if err := os.MkdirAll(filepath.Dir(full), os.ModePerm); err != nil {
 			return fmt.Errorf("failed create parent dir for %s: %w", full, err)
 		}
+
 		content := tplFn(moduleName)
 		if err := os.WriteFile(full, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed write file %s: %w", full, err)
@@ -666,6 +674,37 @@ func Error(c *gin.Context, status int, message string, err interface{}) {
 		"message": message,
 		"error":   err,
 	})
+}
+`
+}
+
+func loggerTpl(module string) string {
+	_ = module
+	return `package logger
+
+import (
+	"fmt"
+	"time"
+)
+
+func Info(msg string, args ...interface{}) {
+	fmt.Printf("ℹ️ [INFO] %s - %s\n",
+		time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
+}
+
+func Success(msg string, args ...interface{}) {
+	fmt.Printf("✅ [SUCCESS] %s - %s\n",
+		time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
+}
+
+func Warn(msg string, args ...interface{}) {
+	fmt.Printf("⚠️ [WARN] %s - %s\n",
+		time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
+}
+
+func Error(msg string, err error) {
+	fmt.Printf("❌ [ERROR] %s - %s: %v\n",
+		time.Now().Format("15:04:05"), msg, err)
 }
 `
 }
