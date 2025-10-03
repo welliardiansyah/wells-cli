@@ -1,20 +1,23 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/welliardiansyah/wells-cli/internal/scaffold"
 )
 
 var modelCmd = &cobra.Command{
 	Use:   "model [name]",
-	Short: "Generate model/entity",
+	Short: "Generate a model/entity",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
-		fmt.Printf("🔨 Membuat model %s ...\n", name)
-		return scaffold.CreateModel(name)
+		scaffold.LogInfo("Creating model %s ...", name)
+		if err := scaffold.CreateModel(name); err != nil {
+			scaffold.LogError("Failed to create model", err)
+			return err
+		}
+		scaffold.LogSuccess("Model %s successfully created", name)
+		return nil
 	},
 }
 

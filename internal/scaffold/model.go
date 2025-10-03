@@ -14,8 +14,8 @@ func CreateModel(name string) error {
 	content := fmt.Sprintf(`package entities
 
 type %s struct {
-	ID   uint   \`+"`json:\"id\" gorm:\"primaryKey\"`\n"+`
-	Name string \`+"`json:\"name\"`\n"+`
+	ID   uint   `+"`json:\"id\" gorm:\"primaryKey\"`"+`
+	Name string `+"`json:\"name\"`"+`
 }
 `, entityName)
 
@@ -23,6 +23,6 @@ type %s struct {
 		return err
 	}
 
-	fmt.Println("✅ Model", entityName, "dibuat di", filePath)
+	fmt.Println("✅ Model", entityName, "has been created at", filePath)
 	return nil
 }

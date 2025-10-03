@@ -9,11 +9,11 @@ import (
 
 var newCmd = &cobra.Command{
 	Use:   "new [project name]",
-	Short: "Generate project baru",
+	Short: "Generate a new project",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName := args[0]
-		fmt.Printf("Membuat project baru: %s\n", projectName)
+		fmt.Printf("Creating a new project: %s\n", projectName)
 		return scaffold.CreateProject(projectName)
 	},
 }
