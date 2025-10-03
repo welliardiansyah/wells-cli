@@ -81,8 +81,16 @@ myapp/
 <pre><code>wells-cli new myapp
 cd myapp
 go mod tidy
-wells-cli run
 </code></pre>
+
+<p>Run the project:</p> 
+<ul>
+  <p>Run HTTP server</p>
+  <li><pre><code>wells-cli run api</code></pre></li>
+  <p>Run worker process</p>
+  <li><pre><code>wells-cli worker api</code></pre></li>
+</ul>
+<!-- <pre>code>wells-cli run api → Run HTTP server (HTTPS)</pre> <pre><code>wells-cli worker</code> → Run worker process</pre> -->
 
 <h2 id="cli-commands">💻 CLI Commands</h2>
 <h3>Code Generation Commands</h3>

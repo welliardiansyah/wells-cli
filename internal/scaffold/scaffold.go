@@ -159,7 +159,6 @@ func main() {
 }
 
 func workerTpl(module string) string {
-	// minimal worker main
 	return fmt.Sprintf(`package main
 
 import (
@@ -169,7 +168,7 @@ import (
 
 func main() {
 	fmt.Println("Worker started (minimal template). Press Ctrl+C to exit.")
-	// contoh loop sederhana, ganti dengan job queue / cron sesuai kebutuhan
+
 	for {
 		fmt.Println("Worker heartbeat:", time.Now().Format(time.RFC3339))
 		time.Sleep(30 * time.Second)
@@ -218,7 +217,6 @@ REFRESH_TOKEN_TTL=24h
 }
 
 func serverTpl(module string) string {
-	// Note: imports use module path so files live under module root; cmd/api is the binary
 	return fmt.Sprintf(`package http
 
 import (
