@@ -36,6 +36,7 @@ var projectStructure = map[string][]string{
 
 var templateFiles = map[string]func(string) string{
 	"cmd/api/main.go":                                    mainTpl,
+	"cmd/worker/main.go":                                 workerTpl,
 	"go.mod":                                             goModTpl,
 	"app.env":                                            envTpl,
 	"interfaces/http/server.go":                          serverTpl,
@@ -139,6 +140,7 @@ func GenerateUnitTest(name, folder, structName, module, testType string) error {
 // ----------------------- TEMPLATES -----------------------
 
 func mainTpl(module string) string {
+	// main for cmd/api
 	return fmt.Sprintf(`package main
 
 import (
@@ -156,6 +158,26 @@ func main() {
 `, module)
 }
 
+func workerTpl(module string) string {
+	// minimal worker main
+	return fmt.Sprintf(`package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("Worker started (minimal template). Press Ctrl+C to exit.")
+	// contoh loop sederhana, ganti dengan job queue / cron sesuai kebutuhan
+	for {
+		fmt.Println("Worker heartbeat:", time.Now().Format(time.RFC3339))
+		time.Sleep(30 * time.Second)
+	}
+}
+`)
+}
+
 func goModTpl(module string) string {
 	return fmt.Sprintf(`module %s
 
@@ -165,6 +187,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	gorm.io/gorm v1.25.5
 	gorm.io/driver/postgres v1.4.0
+	gorm.io/driver/sqlite v1.6.6
 	github.com/spf13/viper v1.16.0
 )
 `, module)
@@ -196,6 +219,7 @@ REFRESH_TOKEN_TTL=24h
 }
 
 func serverTpl(module string) string {
+	// Note: imports use module path so files live under module root; cmd/api is the binary
 	return fmt.Sprintf(`package http
 
 import (
@@ -230,6 +254,14 @@ func NewServer() *Server {
 	} else {
 		log.Println("warning: log file not created, using stdout")
 	}
+
+	// health & root
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "message": "🚀 API is running"})
+	})
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "healthy"})
+	})
 
 	cfg := config.GetConfig()
 	if err := database.InitializeDatabase(cfg.DBSource); err != nil {
@@ -331,22 +363,31 @@ func LoadConfig(path string) (config Config, err error) {
 }
 
 func databaseTpl(module string) string {
+	// Including sqlite fallback so generated project can run without Postgres
 	return `package database
 
 import (
 	"fmt"
+	"log"
 	"` + module + `/domain/entities"
 
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
 func InitializeDatabase(dsn string) error {
+	// Try Postgres first
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to connect to PostgreSQL: %w", err)
+		// Fallback to sqlite
+		log.Println("⚠️ PostgreSQL connect failed, fallback to SQLite (data.db):", err)
+		db, err = gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+		if err != nil {
+			return fmt.Errorf("failed to connect to any database: %w", err)
+		}
 	}
 
 	DB = db
@@ -354,7 +395,7 @@ func InitializeDatabase(dsn string) error {
 		return fmt.Errorf("failed to migrate: %w", err)
 	}
 
-	fmt.Println("✅ PostgreSQL connected and migrated")
+	fmt.Println("✅ Database connected and migrated")
 	return nil
 }
 
@@ -544,6 +585,7 @@ func ToUserEntity(dto *dtos.UserDTO) *entities.User {
 }
 
 func userHandlerTpl(module string) string {
+	// Note: response import changed to pkg/response
 	return `package users
 
 import (
@@ -552,7 +594,7 @@ import (
 
 	"` + module + `/application/dtos"
 	"` + module + `/application/usecases"
-	"` + module + `/response"
+	"` + module + `/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
