@@ -88,7 +88,7 @@ go mod tidy
   <p>Run HTTP server</p>
   <li><pre><code>wells-cli run api</code></pre></li>
   <p>Run worker process</p>
-  <li><pre><code>wells-cli worker api</code></pre></li>
+  <li><pre><code>wells-cli worker</code></pre></li>
 </ul>
 <!-- <pre>code>wells-cli run api → Run HTTP server (HTTPS)</pre> <pre><code>wells-cli worker</code> → Run worker process</pre> -->
 
