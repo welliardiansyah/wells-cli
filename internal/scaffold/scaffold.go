@@ -187,7 +187,6 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	gorm.io/gorm v1.25.5
 	gorm.io/driver/postgres v1.4.0
-	gorm.io/driver/sqlite v1.6.6
 	github.com/spf13/viper v1.16.0
 )
 `, module)
