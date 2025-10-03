@@ -51,14 +51,28 @@
 <h2 id="project-structure">🗂️ Generated Project Structure</h2>
 <pre>
 myapp/
-├── application/       # Usecases, services, mappers, DTOs
-├── domain/            # Entities, repository interfaces
-├── infrastructure/    # Database, Redis, external services
-├── interfaces/http/   # HTTP handlers, routing
-├── response/          # Response helpers (JSON, paging, error)
-├── util/              # Utility functions
-├── main.go            # Application entry point
-└── go.mod             # Go modules
+├── cmd/myapp/main.go        # Entry point aplikasi
+├── config/config.go         # Konfigurasi (env, viper, dsb)
+├── application/             # Layer aplikasi
+│   ├── dtos/                # Data Transfer Objects
+│   ├── mappers/             # Mapper antar DTO dan entity
+│   └── usecases/            # Business logic / usecase
+├── domain/                  # Layer domain
+│   ├── entities/            # Entity inti (User, Order, dll)
+│   └── repository/          # Repository interfaces
+├── infrastructure/          # Infrastruktur teknis
+│   ├── database/            # DB connection & migration
+│   ├── cache/               # Redis, cache adapter
+│   ├── external/            # External API client
+│   └── persistence/         # Repository implementation (ORM, dsb)
+├── interfaces/              # Interface/presentasi
+│   ├── http/                # HTTP server, handler, routes
+│   └── cli/                 # CLI command (opsional)
+├── pkg/                     # Package shared
+│   ├── logger/              # Logger helper
+│   └── response/            # Response helper JSON
+├── app.env                  # File konfigurasi environment
+└── go.mod                   # Go modules
 </pre>
 
 <h2 id="installation">🛠️ Installation</h2>
