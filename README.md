@@ -52,14 +52,14 @@
 <h2 id="project-structure">🗂️ Generated Project Structure</h2>
 <pre>
 myapp/
-├── application/       # Usecases, services, mappers, DTOs
-├── domain/            # Entities, repository interfaces
-├── infrastructure/    # Database, Redis, external services
-├── interfaces/http/   # HTTP handlers, routing
-├── response/          # Response helpers (JSON, paging, error)
-├── util/              # Utility functions
-├── main.go            # Application entry point
-└── go.mod             # Go modules
+├── cmd/                # Entry points (api, worker, etc.)
+├── application/        # Usecases, DTOs, mappers
+├── domain/             # Entities, repository interfaces
+├── infrastructure/     # Database, Redis, persistence, config
+├── interfaces/http/    # HTTP handlers, routes
+├── pkg/response/       # Response helpers (JSON, paging, error)
+├── go.mod              # Go modules
+├── app.env             # Environment configuration
 </pre>
 
 <h2 id="installation">🛠️ Installation</h2>
