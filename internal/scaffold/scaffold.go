@@ -25,6 +25,11 @@ func LogError(msg string, err error) {
 	fmt.Printf("❌ [ERROR] %s - %s: %v\n", time.Now().Format("15:04:05"), msg, err)
 }
 
+type ProjectData struct {
+	AppName string
+}
+
+// --- Struktur sesuai target ---
 var projectStructure = map[string][]string{
 	"cmd/{{.AppName}}": {},
 	"config":           {},
@@ -35,6 +40,7 @@ var projectStructure = map[string][]string{
 	"pkg":              {"logger", "response"},
 }
 
+// --- File template ---
 var templateFiles = map[string]func(string) string{
 	"cmd/{{.AppName}}/main.go":                      mainTpl,
 	"go.mod":                                        goModTpl,
@@ -53,6 +59,7 @@ var templateFiles = map[string]func(string) string{
 	"pkg/logger/logger.go":                          loggerTpl,
 }
 
+// --- Create Project ---
 func CreateProject(projectName string) error {
 	start := time.Now()
 	moduleName := strings.TrimSpace(projectName)
@@ -74,7 +81,9 @@ func CreateProject(projectName string) error {
 
 	// create base folders
 	for folder, subs := range projectStructure {
-		base := filepath.Join(projectName, folder)
+		// replace {{.AppName}}
+		path := strings.ReplaceAll(folder, "{{.AppName}}", moduleName)
+		base := filepath.Join(projectName, path)
 		if err := os.MkdirAll(base, os.ModePerm); err != nil {
 			return fmt.Errorf("failed create dir %s: %w", base, err)
 		}
