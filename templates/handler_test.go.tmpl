@@ -1,0 +1,29 @@
+package {{ .Package }}
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"{{ .Module }}/application/usecases"
+	users "{{ .Module }}/interfaces/http/users"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test{{ .StructName }}_Routes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockUsecase := usecases.NewUserUsecase(nil)
+	handler := users.NewUserHandler(mockUsecase)
+
+	r := gin.Default()
+	users.RegisterRoutes(r.Group("/api/v1"), handler)
+
+	req, _ := http.NewRequest("GET", "/api/v1/users", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}

@@ -1,0 +1,12 @@
+package {{ .Package }}
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func Test{{ .StructName }}_Basic(t *testing.T) {
+	obj := &{{ .StructName }}{}
+	assert.NotNil(t, obj)
+}

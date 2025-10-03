@@ -2,6 +2,7 @@ package scaffold
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
@@ -78,6 +79,38 @@ func CreateProject(projectName string) error {
 
 	elapsed := time.Since(start)
 	fmt.Printf("✅ Project %s generated in %s\n", projectName, elapsed.Truncate(time.Millisecond))
+	return nil
+}
+
+func GenerateUnitTest(name, folder, structName, module, testType string) error {
+	if err := os.MkdirAll(folder, os.ModePerm); err != nil {
+		return fmt.Errorf("failed create folder %s: %w", folder, err)
+	}
+
+	tmplFile := filepath.Join(TemplatePath(), "templates", testType+".go.tmpl")
+	tmpl, err := template.ParseFiles(tmplFile)
+	if err != nil {
+		return fmt.Errorf("failed parse template: %w", err)
+	}
+
+	testFile := filepath.Join(folder, strings.ToLower(name)+"_test.go")
+	f, err := os.Create(testFile)
+	if err != nil {
+		return fmt.Errorf("failed create test file: %w", err)
+	}
+	defer f.Close()
+
+	data := map[string]string{
+		"Package":    filepath.Base(folder),
+		"StructName": structName,
+		"Module":     module,
+	}
+
+	if err := tmpl.Execute(f, data); err != nil {
+		return fmt.Errorf("failed execute template: %w", err)
+	}
+
+	fmt.Println("✅ Unit test generated:", testFile)
 	return nil
 }
 

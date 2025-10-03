@@ -1,0 +1,53 @@
+package {{ .Package }}
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"{{ .Module }}/application/dtos"
+	"{{ .Module }}/domain/repository"
+	"{{ .Module }}/application/usecases"
+)
+
+// Mock repository
+type Mock{{ .StructName }}Repo struct {
+	mock.Mock
+}
+
+func (m *Mock{{ .StructName }}Repo) Create(user *{{ .Module }}/domain/entities.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *Mock{{ .StructName }}Repo) FindAll() ([]{{ .Module }}/domain/entities.User, error) {
+	args := m.Called()
+	return args.Get(0).([]{{ .Module }}/domain/entities.User), args.Error(1)
+}
+
+func (m *Mock{{ .StructName }}Repo) FindByID(id uint) (*{{ .Module }}/domain/entities.User, error) {
+	args := m.Called(id)
+	return args.Get(0).(*{{ .Module }}/domain/entities.User), args.Error(1)
+}
+
+func (m *Mock{{ .StructName }}Repo) Update(user *{{ .Module }}/domain/entities.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *Mock{{ .StructName }}Repo) Delete(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func Test{{ .StructName }}_CreateUser(t *testing.T) {
+	mockRepo := new(Mock{{ .StructName }}Repo)
+	uc := usecases.NewUserUsecase(mockRepo)
+
+	dto := &dtos.UserDTO{ID: 1, Name: "John", Email: "john@example.com"}
+	mockRepo.On("Create", mock.Anything).Return(nil)
+
+	err := uc.CreateUser(dto)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
