@@ -77,33 +77,33 @@ myapp/
 
 <h2 id="usage">⚡ Usage</h2>
 <p>To scaffold a new Go project:</p>
-<pre><code>wells new myapp
+<pre><code>wells-cli new myapp
 cd myapp
 go mod tidy
-wells run
+wells-cli run
 </code></pre>
 
 <h2 id="cli-commands">💻 CLI Commands</h2>
 <h3>Code Generation Commands</h3>
 <ul>
-  <li><code>wells model NAME</code> → Creates a model/entity</li>
-  <li><code>wells migration-postgres NAME</code> → Creates a PostgreSQL migration file</li>
-  <li><code>wells inbound-http-fiber NAME</code> → Generates HTTP handlers using Fiber</li>
-  <li><code>wells inbound-message-rabbitmq NAME</code> → Creates RabbitMQ message consumers</li>
-  <li><code>wells inbound-command NAME</code> → Creates CLI command handlers</li>
-  <li><code>wells outbound-database-postgres NAME</code> → Creates PostgreSQL database adapter</li>
-  <li><code>wells outbound-http NAME</code> → Creates HTTP client adapter</li>
-  <li><code>wells outbound-message-rabbitmq NAME</code> → Creates RabbitMQ message adapter</li>
-  <li><code>wells outbound-cache-redis NAME</code> → Creates Redis cache adapter</li>
-  <li><code>wells generate-mocks</code> → Generates mock implementations from go:generate directives</li>
+  <li><code>wells-cli model NAME</code> → Creates a model/entity</li>
+  <li><code>wells-cli migration-postgres NAME</code> → Creates a PostgreSQL migration file</li>
+  <li><code>wells-cli inbound-http-fiber NAME</code> → Generates HTTP handlers using Fiber</li>
+  <li><code>wells-cli inbound-message-rabbitmq NAME</code> → Creates RabbitMQ message consumers</li>
+  <li><code>wells-cli inbound-command NAME</code> → Creates CLI command handlers</li>
+  <li><code>wells-cli outbound-database-postgres NAME</code> → Creates PostgreSQL database adapter</li>
+  <li><code>wells-cli outbound-http NAME</code> → Creates HTTP client adapter</li>
+  <li><code>wells-cli outbound-message-rabbitmq NAME</code> → Creates RabbitMQ message adapter</li>
+  <li><code>wells-cli outbound-cache-redis NAME</code> → Creates Redis cache adapter</li>
+  <li><code>wells-cli generate-mocks</code> → Generates mock implementations from go:generate directives</li>
 </ul>
 
 <h3>Runtime Commands</h3>
 <ul>
-  <li><code>wells run</code> → Runs the project (HTTP server by default)</li>
-  <li><code>wells http</code> → Runs project in HTTP server mode</li>
-  <li><code>wells message SUBSCRIBER</code> → Runs message consumer</li>
-  <li><code>wells command CMD NAME</code> → Executes specific CLI command</li>
+  <li><code>wells-cli run</code> → Runs the project (HTTP server by default)</li>
+  <li><code>wells-cli http</code> → Runs project in HTTP server mode</li>
+  <li><code>wells-cli message SUBSCRIBER</code> → Runs message consumer</li>
+  <li><code>wells-cli command CMD NAME</code> → Executes specific CLI command</li>
 </ul>
 
 <h2 id="example-crud">📝 Example CRUD</h2>
@@ -134,30 +134,30 @@ go tool cover -html=coverage.profile -o coverage.html
 <h2 id="development-workflow">🛠 Development Workflow</h2>
 <p>Step-by-step workflow with Wells CLI:</p>
 <ol>
-  <li><strong>Create Models:</strong> <code>wells model product</code></li>
-  <li><strong>Create Database Migrations:</strong> <code>wells migration-postgres product</code></li>
+  <li><strong>Create Models:</strong> <code>wells-cli model product</code></li>
+  <li><strong>Create Database Migrations:</strong> <code>wells-cli migration-postgres product</code></li>
   <li><strong>Implement Domain Logic:</strong> Add business logic in <code>domain/</code> and <code>application/usecases/</code></li>
   <li><strong>Create Inbound Adapters:</strong>
     <ul>
-      <li><code>wells inbound-http-fiber product</code></li>
-      <li><code>wells inbound-message-rabbitmq product</code></li>
-      <li><code>wells inbound-command product</code></li>
+      <li><code>wells-cli inbound-http-fiber product</code></li>
+      <li><code>wells-cli inbound-message-rabbitmq product</code></li>
+      <li><code>wells-cli inbound-command product</code></li>
     </ul>
   </li>
   <li><strong>Create Outbound Adapters:</strong>
     <ul>
-      <li><code>wells outbound-database-postgres product</code></li>
-      <li><code>wells outbound-http product_api</code></li>
-      <li><code>wells outbound-cache-redis product</code></li>
-      <li><code>wells outbound-message-rabbitmq product</code></li>
+      <li><code>wells-cli outbound-database-postgres product</code></li>
+      <li><code>wells-cli outbound-http product_api</code></li>
+      <li><code>wells-cli outbound-cache-redis product</code></li>
+      <li><code>wells-cli outbound-message-rabbitmq product</code></li>
     </ul>
   </li>
-  <li><strong>Write Tests and Generate Mocks:</strong> <code>wells generate-mocks</code></li>
+  <li><strong>Write Tests and Generate Mocks:</strong> <code>wells-cli generate-mocks</code></li>
   <li><strong>Run the Application:</strong>
     <ul>
-      <li><code>wells http</code> → Run HTTP server</li>
-      <li><code>wells message consumer</code> → Run message consumer</li>
-      <li><code>wells command CMD name</code> → Run specific command</li>
+      <li><code>wells-cli http</code> → Run HTTP server</li>
+      <li><code>wells-cli message consumer</code> → Run message consumer</li>
+      <li><code>wells-cli command CMD name</code> → Run specific command</li>
     </ul>
   </li>
 </ol>
