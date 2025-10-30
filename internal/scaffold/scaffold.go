@@ -191,23 +191,39 @@ require (
 }
 
 func envTpl(module string) string {
-	return `ENVIRONMENT=development
+	return `# =========================
+# APP CONFIG
+# =========================
+ENVIRONMENT=development
 BASE_URL=http://localhost:8080
 ALLOWED_ORIGINS=*
 ALLOWED_METHODS=GET,POST,PUT,DELETE
 AUTHORIZATION_HEADERS=Authorization
-
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=wellsdb
-DB_SOURCE=postgresql://postgres:postgres@localhost:5432/wellsdb?sslmode=disable
 HTTP_SERVER_ADDRESS=:8080
 
+# =========================
+# DATABASE CONFIG
+# =========================
+DB_USER=wells
+DB_PASSWORD=password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=wells
+
+# NOTE:
+# DB_SOURCE akan otomatis dihasilkan oleh fungsi LoadConfig()
+# jika kosong. Tapi kamu juga bisa isi manual seperti ini:
+DB_SOURCE=postgresql://wells:password@localhost:5432/wells?sslmode=disable
+
+# =========================
+# REDIS CONFIG
+# =========================
 REDIS_ADDR=localhost:6379
 REDIS_PASSWORD=
 
+# =========================
+# JWT CONFIG
+# =========================
 JWT_SECRET=supersecret
 JWT_ISSUER=wells
 ACCESS_TOKEN_TTL=15m
