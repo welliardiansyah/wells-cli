@@ -275,7 +275,7 @@ func (s *Server) Start(addr string) error {
 	fmt.Println("🚀 starting server at", addr)
 	return s.Engine.Run(addr)
 }
-`, module, module, module, module, module)
+`, module, module, module, module, module, module)
 }
 
 func configTpl(module string) string {
@@ -673,16 +673,6 @@ func RegisterRoutes(rg *gin.RouterGroup) {
 	r.GET("/:id", handler.GetUserByID)
 	r.PUT("/:id", handler.UpdateUser)
 	r.DELETE("/:id", handler.DeleteUser)
-}
-
-// Fungsi legacy untuk kompatibilitas
-func RegisterRoutes(rg *gin.RouterGroup, h *UserHandler) {
-	r := rg.Group("/users")
-	r.POST("/", h.CreateUser)
-	r.GET("/", h.GetUsers)
-	r.GET("/:id", h.GetUserByID)
-	r.PUT("/:id", h.UpdateUser)
-	r.DELETE("/:id", h.DeleteUser)
 }
 `
 }
