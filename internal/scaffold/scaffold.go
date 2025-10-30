@@ -229,6 +229,7 @@ import (
 	"%s/infrastructure/database"
 	"%s/infrastructure/persistence"
 	users "%s/interfaces/http/users"
+	"%s/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -253,10 +254,10 @@ func NewServer() *Server {
 
 	// health & root
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok", "message": "🚀 API is running"})
+		response.Success(c, "API is running", nil)
 	})
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "healthy"})
+		response.Success(c, "healthy", nil)
 	})
 
 	cfg := config.GetConfig()
