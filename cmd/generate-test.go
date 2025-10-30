@@ -14,7 +14,7 @@ var generateTestCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
-		moduleName := "github.com/welliardiansyah/wells-go"
+		moduleName := "%s/application/usecases"
 
 		scaffold.GenerateUnitTest(
 			name,

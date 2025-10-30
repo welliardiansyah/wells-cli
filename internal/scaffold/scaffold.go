@@ -265,7 +265,7 @@ func NewServer() *Server {
 	}
 
 	api := r.Group("/api/v1")
-	users.RegisterRoutes(database.GetDB(), api)
+	users.RegisterRoutes(api)
 
 	return &Server{Engine: r}
 }
@@ -661,12 +661,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterUserRoutes(db *gorm.DB, router *gin.RouterGroup) {
-	repo := persistence.NewUserRepositoryGorm(db)
-	usecase := usecases.NewUserUsecase(repo)
-	handler := NewUserHandler(usecase)
+func RegisterRoutes(rg *gin.RouterGroup) {
+	repo := persistence.NewUserRepositoryGorm(database.GetDB())
+	uc := usecases.NewUserUsecase(repo)
+	handler := NewUserHandler(uc)
 
-	r := router.Group("/users")
+	r := rg.Group("/users")
 	r.POST("/", handler.CreateUser)
 	r.GET("/", handler.GetUsers)
 	r.GET("/:id", handler.GetUserByID)
