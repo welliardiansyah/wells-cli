@@ -10,19 +10,19 @@ import (
 )
 
 func LogInfo(msg string, args ...interface{}) {
-	fmt.Printf("ℹ️ [INFO] %s - %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
+	fmt.Printf("[INFO] %s - %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
 }
 
 func LogSuccess(msg string, args ...interface{}) {
-	fmt.Printf("✅ [SUCCESS] %s - %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
+	fmt.Printf("[SUCCESS] %s - %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
 }
 
 func LogWarning(msg string, args ...interface{}) {
-	fmt.Printf("⚠️ [WARNING] %s - %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
+	fmt.Printf("[WARNING] %s - %s\n", time.Now().Format("15:04:05"), fmt.Sprintf(msg, args...))
 }
 
 func LogError(msg string, err error) {
-	fmt.Printf("❌ [ERROR] %s - %s: %v\n", time.Now().Format("15:04:05"), msg, err)
+	fmt.Printf("[ERROR] %s - %s: %v\n", time.Now().Format("15:04:05"), msg, err)
 }
 
 var projectStructure = map[string][]string{
@@ -140,7 +140,6 @@ func GenerateUnitTest(name, folder, structName, module, testType string) error {
 // ----------------------- TEMPLATES -----------------------
 
 func mainTpl(module string) string {
-	// main for cmd/api
 	return fmt.Sprintf(`package main
 
 import (
@@ -265,12 +264,8 @@ func NewServer() *Server {
 		log.Fatalf("failed open db: %%v", err)
 	}
 
-	repo := persistence.NewUserRepositoryGorm(database.GetDB())
-	uc := usecases.NewUserUsecase(repo)
-	handler := users.NewUserHandler(uc)
-
 	api := r.Group("/api/v1")
-	users.RegisterRoutes(api, handler)
+	users.RegisterRoutes(database.GetDB(), api)
 
 	return &Server{Engine: r}
 }
@@ -655,13 +650,31 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 }
 
 func userRoutesTpl(module string) string {
-	_ = module
 	return `package users
 
 import (
+	"` + module + `/application/usecases"
+	"` + module + `/domain/repository"
+	"` + module + `/infrastructure/persistence"
+
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
+func RegisterUserRoutes(db *gorm.DB, router *gin.RouterGroup) {
+	repo := persistence.NewUserRepositoryGorm(db)
+	usecase := usecases.NewUserUsecase(repo)
+	handler := NewUserHandler(usecase)
+
+	r := router.Group("/users")
+	r.POST("/", handler.CreateUser)
+	r.GET("/", handler.GetUsers)
+	r.GET("/:id", handler.GetUserByID)
+	r.PUT("/:id", handler.UpdateUser)
+	r.DELETE("/:id", handler.DeleteUser)
+}
+
+// Fungsi legacy untuk kompatibilitas
 func RegisterRoutes(rg *gin.RouterGroup, h *UserHandler) {
 	r := rg.Group("/users")
 	r.POST("/", h.CreateUser)
