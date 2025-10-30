@@ -240,10 +240,8 @@ import (
 	"os"
 	"time"
 
-	"%s/application/usecases"
 	"%s/infrastructure/config"
 	"%s/infrastructure/database"
-	"%s/infrastructure/persistence"
 	users "%s/interfaces/http/users"
 	"%s/pkg/response"
 
@@ -291,7 +289,7 @@ func (s *Server) Start(addr string) error {
 	fmt.Println("🚀 starting server at", addr)
 	return s.Engine.Run(addr)
 }
-`, module, module, module, module, module, module)
+`, module, module, module, module)
 }
 
 func configTpl(module string) string {
@@ -671,7 +669,7 @@ func userRoutesTpl(module string) string {
 
 import (
 	"` + module + `/application/usecases"
-	"` + module + `/domain/repository"
+	"` + module + `/infrastructure/database"
 	"` + module + `/infrastructure/persistence"
 
 	"github.com/gin-gonic/gin"
