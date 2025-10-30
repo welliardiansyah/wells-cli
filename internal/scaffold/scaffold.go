@@ -699,28 +699,47 @@ func responseTpl(module string) string {
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+type SuccessResponse struct {
+	Success    bool        ` + "`json:\"success\"`" + `
+	StatusCode int         ` + "`json:\"status_code\"`" + `
+	Message    string      ` + "`json:\"message\"`" + `
+	Timestamp  string      ` + "`json:\"timestamp\"`" + `
+	Data       interface{} ` + "`json:\"data\"`" + `
+}
+
+type ErrorResponse struct {
+	Success    bool        ` + "`json:\"success\"`" + `
+	StatusCode int         ` + "`json:\"status_code\"`" + `
+	Message    string      ` + "`json:\"message\"`" + `
+	Error      interface{} ` + "`json:\"error\"`" + `
+	Timestamp  string      ` + "`json:\"timestamp\"`" + `
+}
+
 func Success(c *gin.Context, message string, data interface{}) {
-	c.JSON(http.StatusOK, gin.H{
-		"success":     true,
-		"status_code": http.StatusOK,
-		"message":     message,
-		"data":        data,
-		"timestamp":   time.Now().Format(time.RFC3339),
-	})
+	response := SuccessResponse{
+		Success:    true,
+		StatusCode: http.StatusOK,
+		Message:    message,
+		Timestamp:  time.Now().Format(time.RFC3339),
+		Data:       data,
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 func Error(c *gin.Context, status int, message string, err interface{}) {
-	c.JSON(status, gin.H{
-		"success":     false,
-		"status_code": status,
-		"message":     message,
-		"error":       err,
-		"timestamp":   time.Now().Format(time.RFC3339),
-	})
+	response := ErrorResponse{
+		Success:    false,
+		StatusCode: status,
+		Message:    message,
+		Error:      err,
+		Timestamp:  time.Now().Format(time.RFC3339),
+	}
+	c.JSON(status, response)
 }
 `
 }
