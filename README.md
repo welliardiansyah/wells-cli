@@ -12,7 +12,7 @@
 
 <!-- Added image -->
 <p align="center">
-  <img src="./asset/wells-logo.png" alt="Golang Overview" width="650">
+  <img src="./asset/logo.png" alt="Golang Overview" width="650">
 </p>
 
 <hr>
